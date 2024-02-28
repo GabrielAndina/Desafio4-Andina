@@ -1,8 +1,15 @@
 <h1>Lista de Productos de Rugby (en Tiempo Real)</h1>
 <ul id="productList">
   {{#each products}}
-    <li>{{this.title}} - {{this.price}} USD</li>
+    <li>
+      {{this.title}} - {{this.price}} USD 
+      <button class="addToCartBtn" data-id="{{this.id}}">Agregar al Carrito</button>
+    </li>
   {{/each}}
+</ul>
+
+<h1>Carrito de Compras</h1>
+<ul id="cartList">
 </ul>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -10,17 +17,52 @@
   const socket = io();
 
   socket.on('productAdded', (product) => {
+    console.log('Nuevo producto agregado:', product);
     const productList = document.getElementById('productList');
     const newProduct = document.createElement('li');
     newProduct.textContent = `${product.title} - ${product.price} USD`;
+    newProduct.innerHTML += `<button class="removeFromCartBtn" data-id="${product.id}">Eliminar del Carrito</button>`;
     productList.appendChild(newProduct);
   });
 
   socket.on('productDeleted', (productId) => {
+    console.log('Producto eliminado:', productId);
     const productList = document.getElementById('productList');
     const deletedProduct = productList.querySelector(`[data-id="${productId}"]`);
     if (deletedProduct) {
       deletedProduct.remove();
     }
+
+    const cartList = document.getElementById('cartList');
+    const deletedCartItem = cartList.querySelector(`[data-id="${productId}"]`);
+    if (deletedCartItem) {
+      deletedCartItem.remove();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('addToCartBtn')) {
+      const productId = event.target.dataset.id;
+      console.log('Producto agregado al carrito:', productId);
+      const product = { id: productId }; // Simula un producto con el ID
+      socket.emit('addProduct', product);
+    }
+
+    if (event.target.classList.contains('removeFromCartBtn')) {
+      const productId = event.target.dataset.id;
+      console.log('Producto eliminado del carrito:', productId);
+      socket.emit('removeProduct', productId);
+      event.target.parentNode.remove(); // Remueve el elemento del carrito al hacer clic en el botón
+    }
+  });
+
+  socket.on('productAddedToCart', (product) => {
+    console.log('Producto agregado al carrito:', product);
+    const cartList = document.getElementById('cartList');
+    const newCartItem = document.createElement('li');
+    newCartItem.textContent = `${product.title} - ${product.price} USD`;
+    newCartItem.setAttribute('data-id', product.id);
+    newCartItem.innerHTML += `<button class="removeFromCartBtn" data-id="${product.id}">Eliminar del Carrito</button>`;
+    cartList.appendChild(newCartItem);
   });
 </script>
