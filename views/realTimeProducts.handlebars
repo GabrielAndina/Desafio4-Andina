@@ -3,7 +3,7 @@
   {{#each products}}
     <li>
       {{this.title}} - {{this.price}} USD 
-      <button class="addToCartBtn" data-id="{{this.id}}">Agregar al Carrito</button>
+      <button class="addToCartBtn" data-id="{{this.id}}" data-title="{{this.title}}" data-price="{{this.price}}">Agregar al Carrito</button>
     </li>
   {{/each}}
 </ul>
@@ -27,12 +27,6 @@
 
   socket.on('productDeleted', (productId) => {
     console.log('Producto eliminado:', productId);
-    const productList = document.getElementById('productList');
-    const deletedProduct = productList.querySelector(`[data-id="${productId}"]`);
-    if (deletedProduct) {
-      deletedProduct.remove();
-    }
-
     const cartList = document.getElementById('cartList');
     const deletedCartItem = cartList.querySelector(`[data-id="${productId}"]`);
     if (deletedCartItem) {
@@ -42,17 +36,21 @@
 
   document.addEventListener('click', (event) => {
     if (event.target.classList.contains('addToCartBtn')) {
-      const productId = event.target.dataset.id;
-      console.log('Producto agregado al carrito:', productId);
-      const product = { id: productId }; // Simula un producto con el ID
+      const product = {
+        id: event.target.dataset.id,
+        title: event.target.dataset.title,
+        price: event.target.dataset.price
+      };
+      console.log('Producto agregado al carrito:', product);
       socket.emit('addProduct', product);
     }
 
     if (event.target.classList.contains('removeFromCartBtn')) {
       const productId = event.target.dataset.id;
       console.log('Producto eliminado del carrito:', productId);
-      socket.emit('removeProduct', productId);
-      event.target.parentNode.remove(); // Remueve el elemento del carrito al hacer clic en el botón
+      socket.emit('deleteProduct', productId);
+      const cartItem = event.target.parentNode;
+      cartItem.parentNode.removeChild(cartItem); 
     }
   });
 
