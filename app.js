@@ -14,6 +14,10 @@ app.set('view engine', 'handlebars');
 
 app.use(express.static('public'));
 
+app.get('/chat', (req, res) => {
+  res.render('chat'); 
+});
+
 
 app.get('/', (req, res) => {
   res.render('home', { products: getAllProducts() });
@@ -29,6 +33,11 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
+  });
+
+  socket.on('chatMessage', (message) => {
+    console.log('Message received:', message);
+    io.emit('chatMessage', message); 
   });
 
   socket.on('addProduct', (product) => {
